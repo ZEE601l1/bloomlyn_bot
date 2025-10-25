@@ -1,0 +1,10 @@
+
+python-telegram-bot==21.3
+
+google-cloud-firestore
+
+# Common helpers
+requests
+python-dotenv
+
+python-telegram-bot[job-queue]
