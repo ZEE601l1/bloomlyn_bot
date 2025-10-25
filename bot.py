@@ -15,6 +15,7 @@ import os
 from google.oauth2 import service_account
 from telegram.error import BadRequest
 from telegram import InputMediaPhoto
+import json
 
 # HARDCODED CONFIGURATION
 BOT_TOKEN = "8180934284:AAGLOcl-Cfi4r6uoegVkLYV9TG4xRAUkYzs"
@@ -26,19 +27,31 @@ PAYMENT_ACCOUNT = "2027616114"
 PAYMENT_BANK = "UBA"
 PAYMENT_NAME = "Promise M. Abubakar"
 
-# Option A: If using environment variable
-credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-if credentials_path and os.path.exists(credentials_path):
-    credentials = service_account.Credentials.from_service_account_file(credentials_path)
-    db = firestore.Client(credentials=credentials)
-else:
-    # Option B: Direct path
-    try:
-        credentials = service_account.Credentials.from_service_account_file('service-account-key.json')
-        db = firestore.Client(credentials=credentials)
-    except:
-        # Option C: Let it use default discovery
-        db = firestore.Client()
+# Load credentials from Railway environment variable
+credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+
+if not credentials_json:
+    raise Exception("GOOGLE_APPLICATION_CREDENTIALS environment variable is required")
+
+try:
+    # Parse the JSON string into a dictionary
+    credentials_dict = json.loads(credentials_json)
+    
+    # Create credentials from the dictionary
+    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+    
+    # Initialize Firestore client with explicit project ID
+    db = firestore.Client(
+        credentials=credentials,
+        project=credentials_dict.get('project_id')
+    )
+    
+    print("✅ Firestore connected successfully")
+    
+except json.JSONDecodeError as e:
+    raise Exception(f"Invalid JSON in GOOGLE_APPLICATION_CREDENTIALS: {e}")
+except Exception as e:
+    raise Exception(f"Failed to initialize Firestore: {e}")
 
 # Conversation states
 COLLECT_NAME, COLLECT_EMAIL, COLLECT_HALL, COLLECT_PHONE = range(4)
