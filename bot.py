@@ -25,7 +25,7 @@ ADMIN_TELEGRAM_ID = 6022728957  # Replace with your Telegram ID
 # Payment Details
 PAYMENT_ACCOUNT = "1507214019"
 PAYMENT_BANK = "Access Bank"
-PAYMENT_NAME = "David O Abubakar"
+PAYMENT_NAME = "David Omolaye Abubakar"
 
 # Load credentials from Railway environment variable
 credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
