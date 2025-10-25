@@ -20,6 +20,7 @@ from telegram import InputMediaPhoto
 BOT_TOKEN = "8180934284:AAGLOcl-Cfi4r6uoegVkLYV9TG4xRAUkYzs"
 ADMIN_TELEGRAM_ID = 6022728957  # Replace with your Telegram ID
 
+
 # Payment Details
 PAYMENT_ACCOUNT = "2027616114"
 PAYMENT_BANK = "UBA"
