@@ -672,6 +672,7 @@ async def add_to_cart_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         
 
 
+
 # VIEW CART
 async def view_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -683,7 +684,24 @@ async def view_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not cart:
         keyboard = [[InlineKeyboardButton("🛍️ Browse Products", callback_data="browse")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("Your cart is empty", reply_markup=reply_markup)
+        
+        message = "Your cart is empty"
+        
+        try:
+            await query.edit_message_text(message, reply_markup=reply_markup)
+        except BadRequest as e:
+            if "no text in the message" in str(e):
+                try:
+                    await query.message.delete()
+                except Exception as delete_error:
+                    logger.warning(f"Could not delete message: {delete_error}")
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=message,
+                    reply_markup=reply_markup
+                )
+            else:
+                raise e
         return
     
     message = "🛒 Your Bloomlyn Cart\n\n"
@@ -712,7 +730,22 @@ async def view_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await query.edit_message_text(message, reply_markup=reply_markup)
+    try:
+        await query.edit_message_text(message, reply_markup=reply_markup)
+    except BadRequest as e:
+        if "no text in the message" in str(e):
+            # If editing fails because it's a photo message, delete and send new message
+            try:
+                await query.message.delete()
+            except Exception as delete_error:
+                logger.warning(f"Could not delete message: {delete_error}")
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=message,
+                reply_markup=reply_markup
+            )
+        else:
+            raise e
 
 
 
