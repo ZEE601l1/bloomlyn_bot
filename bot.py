@@ -439,7 +439,7 @@ async def show_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     keyboard.append([
         InlineKeyboardButton("Collections", callback_data="browse"),
-        InlineKeyboardButton("🏠 Menu", callback_data="start")
+        InlineKeyboardButton("View Cart", callback_data="view_cart")
     ])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
