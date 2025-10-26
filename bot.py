@@ -221,6 +221,43 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 # Re-raise other errors
                 raise e
+            
+
+async def show_single_product(update: Update, context: ContextTypes.DEFAULT_TYPE, product):
+    user_id = update.effective_user.id
+    cart = get_user_cart(user_id)
+    
+    message = (
+        f"{product['name']}\n"
+        f"₦{product['price']:,}\n\n"
+        f"{product.get('description', 'A beautiful piece for you')}"
+    )
+    
+    keyboard = [
+        [InlineKeyboardButton("Add to Cart", callback_data=f"add_cart_{product['id']}")],
+    ]
+    
+    # Add cart and browse buttons
+    action_buttons = []
+    if cart:
+        action_buttons.append(InlineKeyboardButton(f"View Cart ({len(cart)})", callback_data="view_cart"))
+    action_buttons.append(InlineKeyboardButton("View More", callback_data="browse"))
+    keyboard.append(action_buttons)
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Send product image if exists
+    image_path = product.get('image_path', '')
+    if image_path and os.path.exists(image_path):
+        try:
+            with open(image_path, 'rb') as photo:
+                await update.message.reply_photo(photo=photo, caption=message, reply_markup=reply_markup)
+        except Exception as e:
+            logger.error(f"Error sending image: {e}")
+            await update.message.reply_text(message, reply_markup=reply_markup)
+    else:
+        await update.message.reply_text(message, reply_markup=reply_markup)
+
 
 
 # BROWSE PRODUCTS
