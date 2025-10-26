@@ -935,7 +935,7 @@ async def payment_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     order_summary += f"Delivery: FREE\n"
     order_summary += f"Total Paid: ₦{total:,}\n"
     order_summary += f"\nOrder ID: {order_id}"
-    order_summary += "\n\nPlease wait as we confirm your payment and process your order, you can contact us @chat_bloomlyn for any inquiries. Thank you for shopping with Bloomlyn🌸"
+    order_summary += "\n\nPlease wait as we confirm your payment and process your order, you can contact us @chat_bloomlyn for any inquiries.\n\n Thank you for shopping with Bloomlyn🌸"
     
     clear_cart(user_id)
     
