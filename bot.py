@@ -817,7 +817,7 @@ async def checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.edit_message_text(
         "Almost done!\n\n"
         "Please share your delivery details\n\n"
-        "First, what's your full name?"
+        "First, what's your name?"
     )
     
     return COLLECT_NAME
