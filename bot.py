@@ -182,9 +182,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         })
     
     keyboard = [
-        [InlineKeyboardButton("Browse Collections", callback_data="browse")],
+        [InlineKeyboardButton("🌸 Browse Collections", callback_data="browse")],
         [InlineKeyboardButton("My Orders", callback_data="my_orders")],
-        [InlineKeyboardButton("🌸 About Bloomlyn", callback_data="about")]
+        [InlineKeyboardButton("Contact Support", callback_data="about")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
