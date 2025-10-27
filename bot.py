@@ -319,7 +319,7 @@ async def start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("Browse Collections", callback_data="browse")],
         [InlineKeyboardButton("My Orders", callback_data="my_orders")],
-        [InlineKeyboardButton("🌸 About Bloomlyn", callback_data="about")]
+        [InlineKeyboardButton("Contact Support", callback_data="about")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1134,10 +1134,7 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = (
-    "At Bloomlyn, we believe that beauty is found in the quiet moments, "
-    "in the details that complete your look.\n\n"
-    "Our curated collection of earrings, bags, clips, and bracelets "
-    "brings an air of refined elegance to your every day."
+    "Contact us at @chat_bloomlyn for any inquiries or support."
  )
 
     
