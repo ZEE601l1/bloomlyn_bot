@@ -189,7 +189,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     message = (
-        "Hey gorgeous🌸\n\n"
+        "Heyy🌸\n\n"
         "Welcome to Bloomlyn, your destination for feminine elegance.\n"
         "Tap below to explore our collections"
     )
@@ -324,7 +324,7 @@ async def start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     message = (
-        "Hey gorgeous!\n\n"
+        "Heyy🌸\n\n"
         "Welcome to Bloomlyn, your destination for feminine elegance.\n"
         "Tap below to explore our collections"
     )
@@ -885,7 +885,7 @@ async def collect_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Account Number: {PAYMENT_ACCOUNT}\n"
         f"Bank: {PAYMENT_BANK}\n"
         f"Account Name: {PAYMENT_NAME}\n\n"
-        "📝 Use the Order ID as transfer reference when transferring."
+        "📝 Use the Order ID as TRANSFER REFERENCE when transferring.(So we can comfirm your order faster)"
         "\nAfter making the payment, click the button below."
     )
     
@@ -1034,7 +1034,7 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         total += item_total
     
     order_summary += f"- Total Paid: ₦{total:,}\n"
-    order_summary += "\nYour order will be delivered to you within 24 - 48 hours."
+    order_summary += "\nYour order will be delivered to you within 24 to 48 hours."
     order_summary += "\n\nWe'll contact you on the phone number you provided for delivery updates."
     order_summary += "\nJoin our telegram channel @bloomlyn_store for new products updates."
     order_summary += "\n\nThank you for shopping with Bloomlyn🌸"
