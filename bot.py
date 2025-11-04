@@ -475,7 +475,7 @@ async def show_product(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(nav_buttons)
     
     keyboard.append([
-        InlineKeyboardButton("Collections", callback_data="browse"),
+        InlineKeyboardButton("More Products", callback_data="browse"),
         InlineKeyboardButton("View Cart", callback_data="view_cart")
     ])
     
