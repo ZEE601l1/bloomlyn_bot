@@ -59,7 +59,7 @@ ADMIN_ADD_NAME, ADMIN_ADD_CATEGORY, ADMIN_ADD_PRICE, ADMIN_ADD_DESC, ADMIN_ADD_I
 TRACK_ORDER_INPUT = 10
 
 # Categories
-CATEGORIES = [ "Nails", "Perfumes", "Chunky Bracelets", "Rings", "Bracelets", "Floral Clips", "Necklaces", "Bags", "ID Card Cases"]
+CATEGORIES = [ "Watches", "Nails", "Perfumes", "Chunky Bracelets", "Rings", "Bracelets", "Floral Clips", "Necklaces", "Bags", "ID Card Cases"]
 
 # Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
