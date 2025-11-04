@@ -885,7 +885,7 @@ async def collect_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Account Number: {PAYMENT_ACCOUNT}\n"
         f"Bank: {PAYMENT_BANK}\n"
         f"Account Name: {PAYMENT_NAME}\n\n"
-        "📝 Use the Order ID as TRANSFER REFERENCE when transferring.(So we can comfirm your order faster)"
+        "📝 Use the Order ID as TRANSFER NARRATION when transferring.(So we can comfirm your order faster)"
         "\nAfter making the payment, click the button below."
     )
     
