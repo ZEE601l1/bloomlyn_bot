@@ -1375,7 +1375,13 @@ def main():
             COLLECT_HALL: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_hall)],
             COLLECT_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_phone)],
         },
-        fallbacks=[CommandHandler("cancel", cancel)],
+        fallbacks=[
+            CommandHandler("cancel", cancel),
+            CallbackQueryHandler(checkout, pattern="^checkout$")  # Allow restarting checkout
+        ],
+        allow_reentry=True,  # Allow users to restart checkout
+        per_user=True,  # Separate conversations per user
+        conversation_timeout=300,  # 5 minute timeout
     )
     
     # Track order conversation
