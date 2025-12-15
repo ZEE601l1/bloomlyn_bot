@@ -54,7 +54,7 @@ except Exception as e:
     raise Exception(f"Failed to initialize Firestore: {e}")
 
 # Conversation states
-COLLECT_NAME, COLLECT_EMAIL, COLLECT_HALL, COLLECT_PHONE = range(4)
+COLLECT_NAME, COLLECT_EMAIL, COLLECT_HALL, COLLECT_PHONE, PAYMENT_CONFIRMATION = range(5)
 ADMIN_ADD_NAME, ADMIN_ADD_CATEGORY, ADMIN_ADD_PRICE, ADMIN_ADD_DESC, ADMIN_ADD_IMAGE = range(5, 10)
 TRACK_ORDER_INPUT = 10
 
@@ -804,22 +804,51 @@ async def clear_cart_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
+
     user_id = update.effective_user.id
     cart = get_user_cart(user_id)
-    
+
     if not cart:
-        await query.edit_message_text("Your cart is empty")
-        return
-    
+        try:
+            await query.edit_message_text("Your cart is empty")
+        except BadRequest as e:
+            if "no text in the message" in str(e):
+                try:
+                    await query.message.delete()
+                except Exception as delete_error:
+                    logger.warning(f"Could not delete message: {delete_error}")
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text="Your cart is empty"
+                )
+            else:
+                raise e
+        return ConversationHandler.END
+
     context.user_data['checkout_cart'] = cart
-    
-    await query.edit_message_text(
+
+    message = (
         "Almost done!\n\n"
         "Please share your delivery details\n\n"
         "First, what's your name?"
     )
-    
+
+    try:
+        await query.edit_message_text(message)
+    except BadRequest as e:
+        if "no text in the message" in str(e):
+            # If editing fails because it's a photo message, delete and send new message
+            try:
+                await query.message.delete()
+            except Exception as delete_error:
+                logger.warning(f"Could not delete message: {delete_error}")
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=message
+            )
+        else:
+            raise e
+
     return COLLECT_NAME
 
 
