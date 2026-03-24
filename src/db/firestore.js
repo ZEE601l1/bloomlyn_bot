@@ -138,6 +138,11 @@ export async function getOrdersByPhone(phone) {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
+export async function getOrderById(orderId) {
+  const doc = await getDb().collection('bloomlyn_orders').doc(orderId).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
+}
+
 // ==================== VENDOR QUERIES ====================
 
 export async function getOrCreateVendor(channelId, name = '') {
