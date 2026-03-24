@@ -1,0 +1,24 @@
+{
+  "name": "bloomlyn-bot",
+  "version": "2.0.0",
+  "description": "Bloomlyn automated vendor scraping, AI compositing & Telegram bot pipeline",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "scraper": "node src/scraper/telegramScraper.js",
+    "bot": "node src/bot/bloomlynBot.js"
+  },
+  "dependencies": {
+    "telegram": "^2.26.8",
+    "node-telegram-bot-api": "^0.66.0",
+    "firebase-admin": "^12.0.0",
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.5",
+    "input": "^1.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
