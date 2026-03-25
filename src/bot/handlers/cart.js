@@ -54,7 +54,13 @@ export default function registerCart(bot) {
       };
 
       if (messageId) {
-        await bot.editMessageText(message, { chat_id: chatId, message_id: messageId, ...opts });
+        try {
+          await bot.editMessageText(message, { chat_id: chatId, message_id: messageId, ...opts });
+        } catch (e) {
+          // If editing fails (e.g. current message is a photo), delete and send new
+          await bot.deleteMessage(chatId, messageId).catch(() => {});
+          await bot.sendMessage(chatId, message, opts);
+        }
       } else {
         await bot.sendMessage(chatId, message, opts);
       }

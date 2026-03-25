@@ -123,15 +123,22 @@ export default function registerBrowse(bot) {
         const productId = data.replace('add_cart_', '');
         const session = userSessions.get(chatId);
         const quantity = session?.quantities[productId] || 1;
+        
+        // Find product name for the notification
+        const product = session?.products.find(p => p.id === productId);
+        const productName = product?.name || 'Item';
 
         const user = await getOrCreateUser(query.from.id, query.from);
         const cart = user.cart || [];
         
         const existing = cart.find(item => item.product_id === productId);
+        let alertText = "";
         if (existing) {
           existing.quantity += quantity;
+          alertText = `🔄 UPDATED ${productName} quantity to ${existing.quantity}!`;
         } else {
           cart.push({ product_id: productId, quantity: quantity });
+          alertText = `✅ ADDED ${quantity} ${productName} to cart!`;
         }
         
         await updateCart(user.id, cart);
@@ -139,19 +146,38 @@ export default function registerBrowse(bot) {
         // Reset quantity for this product in session
         if (session) session.quantities[productId] = 1;
 
-        await bot.answerCallbackQuery(query.id, { text: `✅ ${quantity} item(s) added to cart!` });
+        // Show a quick alert at the top of the screen
+        await bot.answerCallbackQuery(query.id, { text: alertText });
         
-        const message = `✅ Added to your cart!\n\nYou currently have ${cart.length} item(s) in your cart.`;
-        await bot.editMessageText(message, {
-          chat_id: chatId,
-          message_id: query.message.message_id,
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "🛒 View Cart", callback_data: "view_cart" }],
-              [{ text: "🛍️ Continue Shopping", callback_data: "browse" }]
-            ]
-          }
-        });
+        const cartMessage = `<b>✅ ${alertText}</b>\n\nYou currently have ${cart.length} unique items in your cart.`;
+        
+        // Try to update the CAPTION if it's a photo, or text if it's text
+        try {
+          await bot.editMessageCaption(cartMessage, {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🛒 View Cart", callback_data: "view_cart" }],
+                [{ text: "🛍️ Continue Shopping", callback_data: `category_${session?.category || 'all'}` }]
+              ]
+            }
+          });
+        } catch (e) {
+          // Fallback to editing text if it wasn't a photo
+          await bot.editMessageText(cartMessage, {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🛒 View Cart", callback_data: "view_cart" }],
+                [{ text: "🛍️ Continue Shopping", callback_data: `category_${session?.category || 'all'}` }]
+              ]
+            }
+          });
+        }
       }
 
       if (data === 'no_op') {
