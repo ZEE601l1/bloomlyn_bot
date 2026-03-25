@@ -12,34 +12,40 @@ const genAI = new GoogleGenerativeAI(config.geminiApiKey);
  */
 export async function extractProductData(caption, category) {
   try {
-    const model = genAI.getGenerativeModel({ model: AI_MODELS.PRIMARY });
+    const model = genAI.getGenerativeModel({ 
+      model: AI_MODELS.PRIMARY,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Concise product name" },
+            price: { type: "number", description: "Base numeric price in Naira" },
+            description: { type: "string", description: "Clean description without emojis or contact info" }
+          },
+          required: ["name", "price", "description"]
+        }
+      }
+    });
     
     const prompt = `
       Extract product details from the following vendor caption.
       Category: ${category}
       Caption: "${caption}"
       
-      Return a JSON object with:
-      - "name": Concise product name.
-      - "price": The base numeric price in Naira (ignore currency symbols, just extract the number).
-      - "description": A clean, formatted description without emojis or vendor contact info.
-      
       CRITICAL INSTRUCTIONS:
-      1. DO NOT confuse measurements (ml, oz, grams, kg) or quantities (pcs, set) with the price. For example, "50ml" is NOT a price of 50.
-      2. If multiple prices are listed (e.g., "1 for 10k, 3 for 29400"), extract the single unit base price (e.g., 10000).
-      3. Look for "N", "₦", "Price:", "P:", "K" (for 1000s) as clues.
-      4. If the price is clearly present but written in a strange way, NORMALIZE IT. 0 should ONLY be returned if there is absolutely no price information.
-      5. This is for a high-volume vendor; be AGGRESSIVE in locating the product price.
+      1. DO NOT confuse measurements (ml, oz, grams, kg) or quantities (pcs, set) with the price.
+      2. If multiple prices are listed, extract the single unit base price.
+      3. If the price is clearly present but written in a strange way, NORMALIZE IT.
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text().replace(/```json|```/g, '').trim();
-    const data = JSON.parse(text);
+    const data = JSON.parse(response.text());
 
     return {
       name: data.name || 'Beautiful Product',
-      vendor_price: parseFloat(data.price) || 0,
+      vendor_price: data.price || 0,
       description: data.description || caption.substring(0, 500)
     };
   } catch (error) {

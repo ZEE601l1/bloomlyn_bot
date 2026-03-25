@@ -39,7 +39,7 @@ export async function classifyProduct(caption, imageBuffer) {
     `;
 
     const result = await model.generateContent(prompt);
-    const category = response.text().trim();
+    const category = result.response.text().trim();
     console.log(`🤖 Text classification result: "${category}"`);
     
     let description = null;
