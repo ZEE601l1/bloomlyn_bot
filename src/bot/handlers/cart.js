@@ -26,11 +26,13 @@ export default function registerCart(bot) {
 
       for (let i = 0; i < cart.length; i++) {
         const item = cart[i];
+        if (!item.product_id) continue;
+
         const product = await getProductById(item.product_id);
         if (product) {
           const price = product.selling_price || product.price || 0;
           const itemTotal = price * item.quantity;
-          message += `${i + 1}. ${product.name}\n`;
+          message += `${i + 1}. <b>${product.name}</b>\n`;
           message += `   ₦${price.toLocaleString()} × ${item.quantity} = ₦${itemTotal.toLocaleString()}\n\n`;
           total += itemTotal;
         }

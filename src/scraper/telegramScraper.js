@@ -70,26 +70,41 @@ export async function startListening(onNewProduct) {
     return;
   }
 
-  console.log(`👁️  Listening to ${vendorChannels.length} vendor channel(s)...`);
+  console.log(`👁️  Listening to ${vendorChannels.length} vendor channel(s):`);
+  vendorChannels.forEach(id => console.log(`   - ${id}`));
 
   client.addEventHandler(async (event) => {
     try {
       const message = event.message;
-      if (!message || !message.media) return; // Skip messages without media
-
-      // Check if message has a photo
-      const isPhoto = message.media?.className === 'MessageMediaPhoto';
-      if (!isPhoto) return;
+      if (!message) return;
 
       // Get the sender channel/chat
       const chatId = message.chatId?.toString() || message.peerId?.channelId?.toString();
+      const isMonitored = vendorChannels.includes(chatId) || 
+                          vendorChannels.includes(`-100${chatId}`) ||
+                          (message.chat?.username && vendorChannels.includes(message.chat.username));
 
-      // Check if this is from a monitored vendor channel
-      if (!vendorChannels.includes(chatId) && !vendorChannels.includes(`-100${chatId}`)) {
+      if (!isMonitored) {
+        // Verbose log for non-monitored channels if needed for debugging
+        // console.log(`[Ignore] Message from ${chatId}`);
         return;
       }
 
-      console.log(`📸 New vendor post from channel ${chatId}`);
+      console.log(`📩 Received message from monitored channel ${chatId}`);
+
+      if (!message.media) {
+        console.log(`⏩ Skipping: No media in message from ${chatId}`);
+        return;
+      }
+
+      // Check if message has a photo
+      const isPhoto = message.media?.className === 'MessageMediaPhoto';
+      if (!isPhoto) {
+        console.log(`⏩ Skipping: Media is not a photo (type: ${message.media.className})`);
+        return;
+      }
+
+      console.log(`📸 Processing photo post from ${chatId}`);
 
       // Download the image
       const imageBuffer = await client.downloadMedia(message.media);
@@ -107,7 +122,7 @@ export async function startListening(onNewProduct) {
         timestamp: new Date(message.date * 1000).toISOString(),
       };
 
-      console.log(`📝 Caption: ${productPost.caption.slice(0, 80)}...`);
+      console.log(`📝 Caption: ${productPost.caption.substring(0, 100).replace(/\n/g, ' ')}...`);
       await onNewProduct(productPost);
     } catch (error) {
       console.error('❌ Error processing vendor message:', error.message);

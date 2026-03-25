@@ -70,6 +70,9 @@ export async function getProductsByCategory(category) {
 }
 
 export async function getProductById(productId) {
+  if (!productId || typeof productId !== 'string') {
+    return null;
+  }
   const doc = await getDb().collection('bloomlyn_products').doc(productId).get();
   return doc.exists ? { id: doc.id, ...doc.data() } : null;
 }

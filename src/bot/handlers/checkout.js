@@ -118,12 +118,14 @@ export default function registerCheckout(bot) {
         const itemsWithDetails = [];
 
         for (const item of session.cart) {
+          if (!item.product_id) continue;
+          
           const product = await getProductById(item.product_id);
           if (product) {
             const price = product.selling_price || product.price || 0;
             const itemTotal = price * item.quantity;
             total += itemTotal;
-            itemizedSummary += `• ${product.name}\n   ₦${price.toLocaleString()} × ${item.quantity} = ₦${itemTotal.toLocaleString()}\n\n`;
+            itemizedSummary += `• <b>${product.name}</b>\n   ₦${price.toLocaleString()} × ${item.quantity} = ₦${itemTotal.toLocaleString()}\n\n`;
             itemsWithDetails.push({ ...product, quantity: item.quantity });
           }
         }

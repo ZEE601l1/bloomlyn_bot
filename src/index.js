@@ -11,7 +11,7 @@ import { findDuplicate } from './pipeline/duplicateDetector.js';
 import { uploadAndGetFileId } from './pipeline/storage.js';
 import { compositeImage, initCompositor } from './pipeline/imageCompositor.js';
 import { insertProduct, updateProduct, getOrCreateVendor } from './db/firestore.js';
-import { notifyChannel, notifyAdmin } from './bot/channelNotifier.js';
+import { notifyChannel, notifyAdmin, notifyAdminStatus } from './bot/channelNotifier.js';
 import jobQueue from './queue/jobQueue.js';
 
 async function main() {
@@ -36,21 +36,29 @@ async function main() {
        await startListening(async (post) => {
          // Queue it for sequential processing to avoid AI rate limits
          jobQueue.enqueue(async () => {
-           console.log(`🧵 Processing new post from ${post.vendorId}`);
+           const logMsg = `🧵 <b>Processing new post</b> from <code>${post.vendorId}</code>`;
+           console.log(logMsg.replace(/<[^>]*>/g, ''));
+           await notifyAdminStatus(bot, logMsg);
 
            // Step 1: Classification
            const category = await classifyProduct(post.caption);
            if (!category) {
-             console.log('⏩ Skipping post: Could not determine category');
+             const skipMsg = `⏩ Skipping post from ${post.vendorId}: Could not determine category`;
+             console.log(skipMsg);
+             await notifyAdminStatus(bot, `❌ <b>Skipped:</b> Category unknown`);
              return;
            }
+           await notifyAdminStatus(bot, `🎯 Classified as: <b>${category}</b>`);
 
            // Step 2: Extraction
            const data = await extractProductData(post.caption, category);
            if (data.vendor_price === 0) {
-             console.log('⏩ Skipping post: No price extracted');
+             const skipMsg = `⏩ Skipping post from ${post.vendorId}: No price extracted`;
+             console.log(skipMsg);
+             await notifyAdminStatus(bot, `❌ <b>Skipped:</b> No price found in caption`);
              return;
            }
+           await notifyAdminStatus(bot, `📦 Extracted: <b>${data.name}</b> (₦${data.vendor_price.toLocaleString()})`);
 
            // Step 3: Duplicate Detection
            const duplicate = await findDuplicate({ name: data.name, description: data.description, category });
@@ -58,6 +66,7 @@ async function main() {
            // Step 4: AI Image Enhancement (Optional)
            let imageToUpload = post.imageBuffer;
            try {
+             await notifyAdminStatus(bot, `✨ <b>Enhancing image...</b>`);
              const enhancedImage = await compositeImage(post.imageBuffer, category.toLowerCase().replace(/s$/, ''));
              if (enhancedImage) imageToUpload = enhancedImage;
            } catch (err) {
@@ -65,9 +74,11 @@ async function main() {
            }
 
            // Step 5: Storage (Upload via bot to get file_id)
+           await notifyAdminStatus(bot, `☁️ <b>Finalizing storage...</b>`);
            const fileId = await uploadAndGetFileId(bot, imageToUpload, config.adminTelegramId);
            if (!fileId) {
              console.log('⏩ Skipping post: Image upload failed');
+             await notifyAdminStatus(bot, `❌ <b>Skipped:</b> Storage upload failed`);
              return;
            }
 
@@ -87,6 +98,7 @@ async function main() {
              });
              // Notify channel about price update
              await notifyChannel(bot, { ...duplicate, selling_price: sellingPrice, telegram_file_id: fileId });
+             await notifyAdminStatus(bot, `🔄 <b>Updated existing product:</b> ${duplicate.name}`);
            } else {
              console.log(`✨ Inserting new product: ${data.name}`);
              const productId = await insertProduct({
@@ -103,6 +115,18 @@ async function main() {
              });
              // Notify channel about new product
              await notifyChannel(bot, { id: productId, name: data.name, selling_price: sellingPrice, description: data.description, telegram_file_id: fileId });
+             
+             // Final Admin notification with Approve/Reject buttons
+             await notifyAdmin(bot, {
+               id: productId,
+               name: data.name,
+               category,
+               vendor_price: data.vendor_price,
+               selling_price: sellingPrice,
+               description: data.description,
+               telegram_file_id: fileId,
+               vendor_id: vendor.id
+             });
            }
          });
        });

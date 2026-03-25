@@ -151,31 +151,28 @@ export default function registerBrowse(bot) {
         
         const cartMessage = `<b>✅ ${alertText}</b>\n\nYou currently have ${cart.length} unique items in your cart.`;
         
-        // Try to update the CAPTION if it's a photo, or text if it's text
-        try {
-          await bot.editMessageCaption(cartMessage, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: "🛒 View Cart", callback_data: "view_cart" }],
-                [{ text: "🛍️ Continue Shopping", callback_data: `category_${session?.category || 'all'}` }]
-              ]
-            }
+        // Detect if it's a photo message or text message
+        const isPhoto = !!(query.message.photo || query.message.caption);
+        
+        const opts = {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "🛒 View Cart", callback_data: "view_cart" }],
+              [{ text: "🛍️ Continue Shopping", callback_data: session?.category ? `category_${session.category}` : "browse" }]
+            ]
+          }
+        };
+
+        if (isPhoto) {
+          await bot.editMessageCaption(cartMessage, opts).catch(e => {
+            console.error('❌ Error editing caption:', e.message);
           });
-        } catch (e) {
-          // Fallback to editing text if it wasn't a photo
-          await bot.editMessageText(cartMessage, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: "🛒 View Cart", callback_data: "view_cart" }],
-                [{ text: "🛍️ Continue Shopping", callback_data: `category_${session?.category || 'all'}` }]
-              ]
-            }
+        } else {
+          await bot.editMessageText(cartMessage, opts).catch(e => {
+            console.error('❌ Error editing text:', e.message);
           });
         }
       }

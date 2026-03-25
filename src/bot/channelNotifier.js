@@ -72,10 +72,18 @@ function formatProductCaption(product) {
 }
 
 /**
- * Notify admin about a new product for approval
+ * Send a quick status update to the admin
  * @param {object} bot - Bot instance
- * @param {object} product - Product data
+ * @param {string} text - Status message
  */
+export async function notifyAdminStatus(bot, text) {
+  try {
+    await bot.sendMessage(config.adminTelegramId, text, { parse_mode: 'HTML' });
+  } catch (error) {
+    console.error(`❌ Admin status notification failed: ${error.message}`);
+  }
+}
+
 export async function notifyAdmin(bot, product) {
   try {
     const caption =
@@ -112,4 +120,4 @@ export async function notifyAdmin(bot, product) {
   }
 }
 
-export default { notifyChannel, notifyAdmin };
+export default { notifyChannel, notifyAdmin, notifyAdminStatus };
