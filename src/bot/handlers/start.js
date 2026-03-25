@@ -35,7 +35,14 @@ export default function registerStart(bot) {
   bot.on('callback_query', async (query) => {
     if (query.data === 'support') {
       await bot.answerCallbackQuery(query.id);
-      await bot.sendMessage(query.message.chat.id, `Contact us at @chat_bloomlyn for any inquiries or support.`);
+      const message = `Contact us at @chat_bloomlyn for any inquiries or support.`;
+      await bot.editMessageText(message, {
+        chat_id: query.message.chat.id,
+        message_id: query.message.message_id,
+        reply_markup: {
+          inline_keyboard: [[{ text: "🔙 Back", callback_data: "start" }]]
+        }
+      });
     }
     if (query.data === 'start') {
         await bot.answerCallbackQuery(query.id);

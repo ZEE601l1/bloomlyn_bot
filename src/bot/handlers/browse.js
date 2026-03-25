@@ -1,5 +1,11 @@
-import { getProductsByCategory, getOrCreateUser, updateCart } from '../../db/firestore.js';
+import { getProductsByCategory, getOrCreateUser, updateCart, getDb } from '../../db/firestore.js';
 import config from '../../config.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // In-memory session to track user browsing state
 // In a large production app, this would be in Redis or Firestore
@@ -7,7 +13,7 @@ const userSessions = new Map();
 
 export default function registerBrowse(bot) {
   // Main browse command (triggered by button or text)
-  const handleBrowse = async (chatId) => {
+  const handleBrowse = async (chatId, messageId = null) => {
     const categories = config.categories;
     const keyboard = [];
     for (let i = 0; i < categories.length; i += 2) {
@@ -19,9 +25,17 @@ export default function registerBrowse(bot) {
     }
     keyboard.push([{ text: "🔙 Back to Menu", callback_data: "start" }]);
 
-    await bot.sendMessage(chatId, "Here's our available products", {
-      reply_markup: { inline_keyboard: keyboard }
-    });
+    const message = "Here's our available products";
+    const opts = { reply_markup: { inline_keyboard: keyboard } };
+
+    if (messageId) {
+      await bot.editMessageText(message, { chat_id: chatId, message_id: messageId, ...opts }).catch(() => {
+        // Fallback if edit fails (e.g. if it was a photo message)
+         bot.sendMessage(chatId, message, opts);
+      });
+    } else {
+      await bot.sendMessage(chatId, message, opts);
+    }
   };
 
   bot.on('message', async (msg) => {
@@ -37,7 +51,7 @@ export default function registerBrowse(bot) {
 
       if (data === 'browse') {
         await bot.answerCallbackQuery(query.id);
-        await handleBrowse(chatId);
+        await handleBrowse(chatId, query.message.message_id);
         return;
       }
 
@@ -160,11 +174,11 @@ async function showProduct(bot, chatId, messageId) {
   const price = product.selling_price || product.price || 0;
   const total = price * quantity;
 
-  const caption = `*${product.name}*\n` +
+  const caption = `<b>${product.name}</b>\n` +
     `₦${price.toLocaleString()}\n\n` +
     `${product.description || 'A beautiful piece for you'}\n\n` +
-    `Quantity: ${quantity}\n` +
-    `Total: ₦${total.toLocaleString()}`;
+    `<b>Quantity:</b> ${quantity}\n` +
+    `<b>Total:</b> ₦${total.toLocaleString()}`;
 
   const keyboard = [
     [
@@ -194,28 +208,79 @@ async function showProduct(bot, chatId, messageId) {
     chat_id: chatId,
     message_id: messageId,
     reply_markup: { inline_keyboard: keyboard },
-    parse_mode: 'Markdown'
+    parse_mode: 'HTML'
   };
 
   try {
-    // If it's the same product (just quantity update), edit caption or text
-    // If it's a different product, we might need to send a new photo or edit media
-    // node-telegram-bot-api's editMessageMedia is a bit different.
-    
-    const isPhotoMessage = true; // Most products have photos
-    
-    if (product.telegram_file_id) {
-       // Since the previous message might have been a text message (loading), 
-       // we might need to delete and send new if it's not a photo message already.
-       // For better UX, let's try to delete the loading message and send the photo.
-       await bot.deleteMessage(chatId, messageId).catch(() => {});
-       await bot.sendPhoto(chatId, product.telegram_file_id, {
-         caption: caption,
-         ...opts,
-         message_id: undefined // Don't pass message_id to sendPhoto
-       });
+    let telegramFileId = product.telegram_file_id;
+
+    // --- LAZY UPLOAD LOGIC ---
+    if (!telegramFileId && product.image_path) {
+      const fullPath = path.resolve(__dirname, '../../../', product.image_path);
+      if (fs.existsSync(fullPath)) {
+        try {
+          // Send temporary loading message if we're uploading a fresh image
+          await bot.editMessageText(`📸 <b>UPLOADING PRODUCT IMAGE...</b>`, {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: 'HTML'
+          }).catch(() => {});
+
+          const sentMsg = await bot.sendPhoto(chatId, fs.createReadStream(fullPath), {
+            caption: caption,
+            reply_markup: { inline_keyboard: keyboard },
+            parse_mode: 'HTML'
+          });
+
+          telegramFileId = sentMsg.photo[sentMsg.photo.length - 1].file_id;
+
+          // Save file_id to Firestore so we don't upload again
+          await getDb().collection('bloomlyn_products').doc(product.id).update({
+            telegram_file_id: telegramFileId
+          });
+
+          // Delete the old message (which was either "Here's products" or "Uploading...")
+          await bot.deleteMessage(chatId, messageId).catch(() => {});
+          return; // Already sent the photo, so we're done
+        } catch (uploadErr) {
+          console.error('❌ Lazy upload failed:', uploadErr.message);
+        }
+      }
+    }
+
+    const isPhoto = !!telegramFileId;
+
+    if (isPhoto) {
+      // Try to edit the media of the current message
+      try {
+        await bot.editMessageMedia({
+          type: 'photo',
+          media: telegramFileId,
+          caption: caption,
+          parse_mode: 'HTML'
+        }, {
+          chat_id: chatId,
+          message_id: messageId,
+          reply_markup: { inline_keyboard: keyboard }
+        });
+      } catch (e) {
+        // If editing media fails (e.g. it wasn't a photo message before), 
+        // delete and send new photo message
+        await bot.deleteMessage(chatId, messageId).catch(() => {});
+        await bot.sendPhoto(chatId, telegramFileId, {
+          caption: caption,
+          reply_markup: { inline_keyboard: keyboard },
+          parse_mode: 'HTML'
+        });
+      }
     } else {
-       await bot.editMessageText(caption, opts);
+      // If it's a text-only product (rare), edit message text
+      await bot.editMessageText(caption, {
+        chat_id: chatId,
+        message_id: messageId,
+        reply_markup: { inline_keyboard: keyboard },
+        parse_mode: 'HTML'
+      });
     }
   } catch (err) {
     console.error('❌ Error showing product:', err.message);

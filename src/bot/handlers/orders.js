@@ -16,8 +16,8 @@ export default function registerOrders(bot) {
 
       let message = "📦 Your Orders\n\n";
       orders.slice(0, 5).forEach(order => {
-        const statusEmoji = order.status === 'pending_confirmation' ? "⏳" : "✅";
-        message += `${statusEmoji} Order ${order.id.slice(0, 8)}... - ₦${(order.total || 0).toLocaleString()}\n`;
+        const statusEmoji = order.status === 'confirmed' ? "✅" : "⏳";
+        message += `${statusEmoji} Order <code>${order.id.slice(0, 8)}</code> - ₦${(order.total || 0).toLocaleString()}\n`;
         message += `Status: ${order.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}\n\n`;
       });
 
@@ -84,7 +84,14 @@ export default function registerOrders(bot) {
       } else if (query.data === 'track_order') {
         await bot.answerCallbackQuery(query.id);
         orderTrackingSessions.add(chatId);
-        await bot.sendMessage(chatId, "Please enter your Order ID or phone number to track your order.\nSend it now:");
+        const message = "Please enter your Order ID or phone number to track your order.\nSend it now:";
+        await bot.editMessageText(message, {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+          reply_markup: {
+            inline_keyboard: [[{ text: "🔙 Back", callback_data: "my_orders" }]]
+          }
+        });
       }
     } catch (error) {
       console.error('❌ Error in orders callback:', error.message);

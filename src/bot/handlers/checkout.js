@@ -17,7 +17,13 @@ export default function registerCheckout(bot) {
         const cart = user.cart || [];
 
         if (cart.length === 0) {
-          return bot.sendMessage(chatId, "Your cart is empty");
+          return bot.editMessageText("Your cart is empty", {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            reply_markup: {
+              inline_keyboard: [[{ text: "🛍️ Browse Products", callback_data: "browse" }]]
+            }
+          });
         }
 
         checkoutSessions.set(chatId, {

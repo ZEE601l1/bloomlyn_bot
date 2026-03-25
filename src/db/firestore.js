@@ -15,12 +15,28 @@ export function initFirestore() {
   if (db) return db;
 
   try {
-    const serviceAccountPath = path.resolve(__dirname, '../../legacy/service-account-key.json');
-    if (!fs.existsSync(serviceAccountPath)) {
-      throw new Error(`Service account key not found at ${serviceAccountPath}`);
+    let serviceAccount;
+
+    // 1. Check for Environment Variable (Best for Railway/Production)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      } catch (e) {
+        console.error('❌ FIREBASE_SERVICE_ACCOUNT env var is not valid JSON');
+      }
     }
 
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    // 2. Fallback to local file
+    if (!serviceAccount) {
+      const serviceAccountPath = path.resolve(__dirname, '../../legacy/service-account-key.json');
+      if (fs.existsSync(serviceAccountPath)) {
+        serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+      }
+    }
+
+    if (!serviceAccount) {
+      throw new Error('No Firebase credentials found (env or file)');
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),

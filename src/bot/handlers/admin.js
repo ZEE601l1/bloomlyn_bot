@@ -11,8 +11,8 @@ export default function registerAdmin(bot) {
         reply_markup: {
           inline_keyboard: [
             [{ text: "View Orders", callback_data: "admin_orders" }],
-            [{ text: "Add Product (AI Handle Automatically)", callback_data: "no_op" }],
-            [{ text: "View Products", callback_data: "admin_view_products" }]
+            [{ text: "View Products", callback_data: "admin_view_products" }],
+            [{ text: "🌱 Seed Sample Data", callback_data: "admin_seed" }]
           ]
         }
       });
@@ -104,6 +104,47 @@ export default function registerAdmin(bot) {
         });
       }
 
+      if (data === 'admin_seed') {
+        const products = [
+          { name: "Emerald Gold Necklace", category: "Necklaces", description: "A stunning emerald piece set in 18k gold plating.", price: 15000, selling_price: 16000, status: "active", normalized_name: "emerald_gold_necklace", telegram_file_id: "", image_path: "legacy/emeraldgoldnecklace.jpg" },
+          { name: "Gold Butterfly Necklace", category: "Necklaces", description: "Delicate butterfly pendant on a fine gold chain.", price: 12000, selling_price: 13000, status: "active", normalized_name: "gold_butterfly_necklace", telegram_file_id: "", image_path: "legacy/goldbutterflynecklace.jpg" },
+          { name: "3-in-1 Stack Bracelet", category: "Bracelets", description: "Versatile triple stack bracelet for everyday elegance.", price: 8000, selling_price: 9000, status: "active", normalized_name: "3_in_1_stack_bracelet", telegram_file_id: "", image_path: "legacy/3in1bracelet.jpg" },
+          { name: "Gold & Silver Chunky Bracelet", category: "Bracelets", description: "Bold two-tone chunky link bracelet.", price: 10000, selling_price: 11000, status: "active", normalized_name: "gold_silver_chunky_bracelet", telegram_file_id: "", image_path: "legacy/goldandsilverchunkybracelet.jpg" },
+          { name: "Gold Rings Set", category: "Rings", description: "A collection of minimalist gold stackable rings.", price: 5000, selling_price: 6000, status: "active", normalized_name: "gold_rings_set", telegram_file_id: "", image_path: "legacy/goldringsset.jpg" },
+          { name: "Silver Butterfly Statement Ring", category: "Rings", description: "Eye-catching silver ring with a butterfly motif.", price: 7000, selling_price: 8000, status: "active", normalized_name: "silver_butterfly_ring", telegram_file_id: "", image_path: "legacy/silverbutterflystatementring.jpg" },
+          { name: "Kaly Vanilla Perfume", category: "Perfumes", description: "Warm and inviting vanilla scent for all-day freshness.", price: 18000, selling_price: 21000, status: "active", normalized_name: "kaly_vanilla_perfume", telegram_file_id: "", image_path: "legacy/kalyvanillapef.jpg" },
+          { name: "Oud Al Layl Perfume", category: "Perfumes", description: "Deep, mysterious oud fragrance with woody notes.", price: 25000, selling_price: 28000, status: "active", normalized_name: "oud_al_layl_perfume", telegram_file_id: "", image_path: "legacy/oudallaylpef.jpg" },
+          { name: "Black Baguette Bag", category: "Bags", description: "Classic black baguette bag, perfect for outings.", price: 35000, selling_price: 38000, status: "active", normalized_name: "black_baguette_bag", telegram_file_id: "", image_path: "legacy/blackbaguettebag.jpg" },
+          { name: "Black MiuMiu Inspired Bag", category: "Bags", description: "Elegant black handbag with detailed quilting.", price: 45000, selling_price: 48000, status: "active", normalized_name: "black_miumiu_bag", telegram_file_id: "", image_path: "legacy/blackmiumiubag.jpg" }
+        ];
+
+        await bot.answerCallbackQuery(query.id, { text: "Starting seed..." });
+        await bot.editMessageText("🌱 Seeding sample products with images...", { chat_id: chatId, message_id: query.message.message_id });
+
+        let addedCount = 0;
+        const db = getDb();
+        for (const product of products) {
+          const existing = await db.collection('bloomlyn_products').where('normalized_name', '==', product.normalized_name).get();
+          if (existing.empty) {
+            await db.collection('bloomlyn_products').add({
+              ...product,
+              created_at: admin.firestore.FieldValue.serverTimestamp(),
+              updated_at: admin.firestore.FieldValue.serverTimestamp()
+            });
+            addedCount++;
+          } else {
+             // If already exists, update the image_path so lazy-upload can find it
+             await existing.docs[0].ref.update({ image_path: product.image_path });
+          }
+        }
+
+        await bot.editMessageText(`✅ Seeding complete! Added ${addedCount} new products.`, {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+          reply_markup: { inline_keyboard: [[{ text: "Back to Menu", callback_data: "admin_back" }]] }
+        });
+      }
+
       if (data === 'admin_back') {
         await bot.editMessageText('Admin Panel', {
           chat_id: chatId,
@@ -111,7 +152,8 @@ export default function registerAdmin(bot) {
           reply_markup: {
             inline_keyboard: [
               [{ text: "View Orders", callback_data: "admin_orders" }],
-              [{ text: "View Products", callback_data: "admin_view_products" }]
+              [{ text: "View Products", callback_data: "admin_view_products" }],
+              [{ text: "🌱 Seed Sample Data", callback_data: "admin_seed" }]
             ]
           }
         });

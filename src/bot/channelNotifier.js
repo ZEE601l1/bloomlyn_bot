@@ -28,7 +28,7 @@ export async function notifyChannel(bot, product) {
           [
             {
               text: '🛍️ Shop Now',
-              url: `https://t.me/${config.botToken.split(':')[0]}?start=product_${product.id}`,
+              url: `https://t.me/bloomlyn_bot?start=product_${product.id}`,
             },
           ],
         ],
