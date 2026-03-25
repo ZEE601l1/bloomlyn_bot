@@ -65,7 +65,6 @@ export async function getProductsByCategory(category) {
     .collection('bloomlyn_products')
     .where('category', '==', category)
     .where('status', '==', 'active')
-    .orderBy('created_at', 'desc')
     .get();
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
