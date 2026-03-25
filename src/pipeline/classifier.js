@@ -12,7 +12,7 @@ export async function classifyProduct(caption) {
   if (!caption) return null;
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
     
     const prompt = `
       Analyze the following product caption and classify it into exactly one of these categories:
@@ -23,6 +23,12 @@ export async function classifyProduct(caption) {
       - Bags
       
       If the product does not fit any of these, return "Other".
+      
+      CONTEXT CLUES:
+      - Perfumes often mention: ml, oz, EDP, EDT, Scent, Fragrance, or brands like Chanel, Dior, Gucci, Tom Ford, etc.
+      - Jewelry (Necklaces, Bracelets, Rings) often mention: Gold, Silver, Zircon, Carat, Karat, pcs, or brands like Cartier, Van Cleef, Pandora.
+      - Bags often mention: Leather, Tote, Handbag, Mini, or brands like LV, Chanel, Birkin, Prada.
+      
       Only return the category name, nothing else.
       
       Caption: "${caption}"
@@ -36,11 +42,14 @@ export async function classifyProduct(caption) {
   } catch (error) {
     console.error('❌ Classification failed:', error.message);
     // Fallback to basic rule-based for mission stability if AI fails
-    if (/necklace|pendant|chain/i.test(caption)) return 'Necklaces';
-    if (/bracelet|bangle/i.test(caption)) return 'Bracelets';
-    if (/ring/i.test(caption)) return 'Rings';
-    if (/perfume|oud|fragrance|pef/i.test(caption)) return 'Perfumes';
-    if (/bag|tote|handbag/i.test(caption)) return 'Bags';
+    const lowerCaption = caption.toLowerCase();
+    
+    if (/necklace|pendant|chain/i.test(lowerCaption)) return 'Necklaces';
+    if (/bracelet|bangle/i.test(lowerCaption)) return 'Bracelets';
+    if (/ring/i.test(lowerCaption)) return 'Rings';
+    if (/perfume|oud|fragrance|pef|ml|oz|scent|edp|edt/i.test(lowerCaption)) return 'Perfumes';
+    if (/bag|tote|handbag/i.test(lowerCaption)) return 'Bags';
+    
     return null;
   }
 }
