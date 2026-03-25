@@ -12,7 +12,7 @@ export async function classifyProduct(caption) {
   if (!caption) return null;
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
     
     const prompt = `
       Analyze the following product caption and classify it into exactly one of these categories:

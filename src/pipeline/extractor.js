@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(config.geminiApiKey);
  */
 export async function extractProductData(caption, category) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
     
     const prompt = `
       Extract product details from the following vendor caption.
@@ -39,7 +39,7 @@ export async function extractProductData(caption, category) {
   } catch (error) {
     console.error('❌ Extraction failed:', error.message);
     // Fallback logic
-    const priceMatch = caption.match(/(?:₦|NGN|N)?\s?(\d{1,3}(?:,\d{3})*)/);
+    const priceMatch = caption.match(/(?:₦|NGN|N)?\s?(\d+(?:,\d{3})*)/);
     const price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : 0;
     
     return {
