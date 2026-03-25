@@ -6,20 +6,21 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '../config.js';
+import AI_MODELS from './aiModels.js';
 
 let genAI;
 let model;
 
 const CATEGORY_PROMPTS = {
-  Bags: 'Place the exact bag from this image into a clean, professional product photo. Show a woman elegantly holding or carrying the bag. Use a soft, minimalist background with natural lighting. The bag must remain exactly as it appears - do not alter its design, color, or details. Focus on the bag as the centerpiece.',
+  bag: 'Place the exact bag from this image into a clean, professional product photo. Show a woman elegantly holding or carrying the bag. Use a soft, minimalist background with natural lighting. The bag must remain exactly as it appears - do not alter its design, color, or details. Focus on the bag as the centerpiece.',
 
-  Bracelets: 'Place the exact bracelet from this image onto a woman\'s wrist in an elegant pose. Use soft, warm lighting with a clean, minimal background. The bracelet must remain exactly as it appears - do not alter its design, stones, or materials. Show the bracelet clearly and beautifully.',
+  bracelet: 'Place the exact bracelet from this image onto a woman\'s wrist in an elegant pose. Use soft, warm lighting with a clean, minimal background. The bracelet must remain exactly as it appears - do not alter its design, stones, or materials. Show the bracelet clearly and beautifully.',
 
-  Necklaces: 'Place the exact necklace from this image on a woman\'s neck, centered and clearly visible. Use a clean, elegant background with soft lighting. The necklace must remain exactly as it appears - do not alter its design, pendant, or chain. Make it the focal point of the image.',
+  necklace: 'Place the exact necklace from this image on a woman\'s neck, centered and clearly visible. Use a clean, elegant background with soft lighting. The necklace must remain exactly as it appears - do not alter its design, pendant, or chain. Make it the focal point of the image.',
 
-  Perfumes: 'Place the exact perfume bottle from this image on a clean, luxurious surface with soft shadows and warm lighting. Add subtle luxury aesthetics - perhaps a marble surface or soft fabric backdrop. The bottle must remain exactly as it appears - do not alter its label, shape, or color.',
+  perfume: 'Place the exact perfume bottle from this image on a clean, luxurious surface with soft shadows and warm lighting. Add luxurious elements like marble, soft fabric, or gold accents. The bottle must remain exactly as it appears - do not alter its label, shape, or color. Highlight the premium nature of the fragrance.',
 
-  Rings: 'Place the exact ring from this image onto a woman\'s finger in an elegant pose. Use soft, warm lighting with a clean, minimal background. The ring must remain exactly as it appears - do not alter its design, stones, or material. Show the ring clearly and beautifully.',
+  ring: 'Place the exact ring from this image onto a woman\'s finger in an elegant pose. Use soft, warm lighting with a clean, minimal background. The ring must remain exactly as it appears - do not alter its design, stones, or material. Show the ring clearly and beautifully.',
 };
 
 /**
@@ -32,7 +33,7 @@ export function initCompositor() {
   }
 
   genAI = new GoogleGenerativeAI(config.geminiApiKey);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  model = genAI.getGenerativeModel({ model: AI_MODELS.MULTIMODAL });
   console.log('✅ Gemini AI compositor initialized');
   return true;
 }

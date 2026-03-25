@@ -41,14 +41,16 @@ async function main() {
            await notifyAdminStatus(bot, logMsg);
 
            // Step 1: Classification
-           const category = await classifyProduct(post.caption);
-           if (!category) {
-             const skipMsg = `⏩ Skipping post from ${post.vendorId}: Could not determine category`;
+           const result = await classifyProduct(post.caption, post.imageBuffer);
+           if (!result || !result.category || result.category === 'Other') {
+             const observation = result?.description || 'Could not determine category from caption or image.';
+             const skipMsg = `⏩ Skipping post: ${observation}`;
              console.log(skipMsg);
-             await notifyAdminStatus(bot, `❌ <b>Skipped:</b> Category unknown`);
+             await notifyAdminStatus(bot, `❌ <b>Skipped:</b> Category unknown\n📝 <i>AI Observation: ${observation}</i>`);
              return;
            }
-           await notifyAdminStatus(bot, `🎯 Classified as: <b>${category}</b>`);
+           const category = result.category;
+           await notifyAdminStatus(bot, `🎯 Classified as: <b>${category}</b>${result.description ? `\n📝 <i>AI Observation: ${result.description}</i>` : ''}`);
 
            // Step 2: Extraction
            const data = await extractProductData(post.caption, category);
@@ -96,8 +98,7 @@ async function main() {
                selling_price: sellingPrice,
                telegram_file_id: fileId
              });
-             // Notify channel about price update
-             await notifyChannel(bot, { ...duplicate, selling_price: sellingPrice, telegram_file_id: fileId });
+             
              await notifyAdminStatus(bot, `🔄 <b>Updated existing product:</b> ${duplicate.name}`);
            } else {
              console.log(`✨ Inserting new product: ${data.name}`);
@@ -113,8 +114,6 @@ async function main() {
                vendor_id: vendor.id,
                status: 'active'
              });
-             // Notify channel about new product
-             await notifyChannel(bot, { id: productId, name: data.name, selling_price: sellingPrice, description: data.description, telegram_file_id: fileId });
              
              // Final Admin notification with Approve/Reject buttons
              await notifyAdmin(bot, {

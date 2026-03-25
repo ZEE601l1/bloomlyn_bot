@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '../config.js';
 import { getProductsByCategory } from '../db/firestore.js';
+import AI_MODELS from './aiModels.js';
 
 const genAI = new GoogleGenerativeAI(config.geminiApiKey);
 
@@ -17,7 +18,7 @@ export async function findDuplicate(newProduct) {
     // Filter to a manageable list of candidates (top 20 most recent)
     const candidates = existingProducts.slice(0, 20);
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: AI_MODELS.PRIMARY });
     
     const prompt = `
       You are a duplicate detection system for a shopping bot.

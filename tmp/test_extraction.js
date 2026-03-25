@@ -14,6 +14,11 @@ async function test() {
       category: "Bags",
       expected: { name: "LV Tote Bag Luxury Edition", price: 120000 }
     },
+    { 
+      caption: "Kaly 50ml 1 for 10k 3 for 29400", 
+      category: "Perfumes",
+      expected: { name: "Kaly 50ml", price: 10000 }
+    },
   ];
 
   for (const tc of testCases) {

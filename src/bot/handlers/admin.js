@@ -1,5 +1,6 @@
 import config from '../../config.js';
-import { getDb, getProductById } from '../../db/firestore.js';
+import { getDb, getProductById, updateProduct } from '../../db/firestore.js';
+import { notifyChannel } from '../channelNotifier.js';
 import admin from 'firebase-admin';
 
 export default function registerAdmin(bot) {
@@ -143,6 +144,40 @@ export default function registerAdmin(bot) {
           message_id: query.message.message_id,
           reply_markup: { inline_keyboard: [[{ text: "Back to Menu", callback_data: "admin_back" }]] }
         });
+      }
+
+      if (data.startsWith('approve_product_')) {
+        const productId = data.replace('approve_product_', '');
+        const product = await getProductById(productId);
+
+        if (!product) return bot.answerCallbackQuery(query.id, { text: "Product not found" });
+
+        // Post to public channel
+        await notifyChannel(bot, { id: productId, ...product });
+
+        await bot.answerCallbackQuery(query.id, { text: "Product approved and posted! ✅" });
+        await bot.editMessageText(`✅ <b>Approved & Posted:</b> ${product.name}`, {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+          parse_mode: 'HTML'
+        });
+      }
+
+      if (data.startsWith('reject_product_')) {
+        const productId = data.replace('reject_product_', '');
+        const product = await getProductById(productId);
+
+        await bot.answerCallbackQuery(query.id, { text: "Product rejected ❌" });
+        await bot.editMessageText(`❌ <b>Rejected:</b> ${product ? product.name : productId}`, {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+          parse_mode: 'HTML'
+        });
+        
+        // Optionally mark as inactive in DB
+        if (product) {
+          await updateProduct(productId, { status: 'rejected' });
+        }
       }
 
       if (data === 'admin_back') {

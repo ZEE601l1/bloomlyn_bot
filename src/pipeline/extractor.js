@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '../config.js';
+import AI_MODELS from './aiModels.js';
 
 const genAI = new GoogleGenerativeAI(config.geminiApiKey);
 
@@ -11,7 +12,7 @@ const genAI = new GoogleGenerativeAI(config.geminiApiKey);
  */
 export async function extractProductData(caption, category) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+    const model = genAI.getGenerativeModel({ model: AI_MODELS.PRIMARY });
     
     const prompt = `
       Extract product details from the following vendor caption.
@@ -23,7 +24,12 @@ export async function extractProductData(caption, category) {
       - "price": The base numeric price in Naira (ignore currency symbols, just extract the number).
       - "description": A clean, formatted description without emojis or vendor contact info.
       
-      If no price is found, return 0 for price.
+      CRITICAL INSTRUCTIONS:
+      1. DO NOT confuse measurements (ml, oz, grams, kg) or quantities (pcs, set) with the price. For example, "50ml" is NOT a price of 50.
+      2. If multiple prices are listed (e.g., "1 for 10k, 3 for 29400"), extract the single unit base price (e.g., 10000).
+      3. Look for "N", "₦", "Price:", "P:", "K" (for 1000s) as clues.
+      4. If the price is clearly present but written in a strange way, NORMALIZE IT. 0 should ONLY be returned if there is absolutely no price information.
+      5. This is for a high-volume vendor; be AGGRESSIVE in locating the product price.
     `;
 
     const result = await model.generateContent(prompt);
