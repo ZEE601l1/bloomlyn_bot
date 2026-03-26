@@ -8,9 +8,10 @@ const genAI = new GoogleGenerativeAI(config.geminiApiKey);
  * Extract structured product data from a caption using Gemini AI.
  * @param {string} caption - The vendor's caption.
  * @param {string} category - The product category.
+ * @param {Buffer} [imageBuffer] - Optional image buffer for multimodal analysis.
  * @returns {Promise<object>} - { name, price, description }
  */
-export async function extractProductData(caption, category) {
+export async function extractProductData(caption, category, imageBuffer) {
   try {
     const model = genAI.getGenerativeModel({ 
       model: AI_MODELS.PRIMARY,
@@ -28,18 +29,31 @@ export async function extractProductData(caption, category) {
       }
     });
     
-    const prompt = `
-      Extract product details from the following vendor caption.
-      Category: ${category}
-      Caption: "${caption}"
-      
-      CRITICAL INSTRUCTIONS:
-      1. DO NOT confuse measurements (ml, oz, grams, kg) or quantities (pcs, set) with the price.
-      2. If multiple prices are listed, extract the single unit base price.
-      3. If the price is clearly present but written in a strange way, NORMALIZE IT.
-    `;
+    const parts = [
+      { text: `
+        Analyze this product image and vendor caption to extract structured details.
+        
+        CATEGORY: ${category}
+        VENDOR CAPTION: "${caption}"
+        
+        CRITICAL RULES:
+        1. REWRITE the description: Do NOT copy the vendor's caption. Instead, write a short (1-2 sentences), "cool", and highly persuasive marketing description. Focus on why a buyer would love this product. IMPORTANT: Ensure you preserve and naturally include any technical specs like volume (ml), weight, or sizing if they were mentioned in the original caption.
+        2. PRICE: Extract the base numeric price in Naira. Do NOT confuse price with measurements (ml, oz) or bulk offers (e.g., if it says "1 for 10k, 3 for 29k", the price is 10000).
+        3. EMOJIS: Use subtle, elegant emojis in the description but keep it professional.
+        4. NO VENDOR INFO: Remove all phone numbers, social media handles, or vendor names from the description.
+      ` }
+    ];
 
-    const result = await model.generateContent(prompt);
+    if (imageBuffer) {
+      parts.push({
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: imageBuffer.toString('base64')
+        }
+      });
+    }
+
+    const result = await model.generateContent(parts);
     const response = await result.response;
     const data = JSON.parse(response.text());
 

@@ -59,13 +59,11 @@ export async function notifyChannel(bot, product) {
  * @returns {string} Formatted caption
  */
 function formatProductCaption(product) {
-  const price = product.selling_price || product.price || 0;
   const name = product.name || 'Beautiful Product';
   const desc = product.description || 'A premium piece from Bloomlyn';
 
   return (
     `✨ <b>${name}</b>\n\n` +
-    `💰 Price: ₦${price.toLocaleString()}\n\n` +
     `${desc}\n\n` +
     `🌸 <i>Bloomlyn – Feminine Elegance</i>`
   );

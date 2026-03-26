@@ -53,7 +53,7 @@ async function main() {
            await notifyAdminStatus(bot, `🎯 Classified as: <b>${category}</b>${result.description ? `\n📝 <i>AI Observation: ${result.description}</i>` : ''}`);
 
            // Step 2: Extraction
-           const data = await extractProductData(post.caption, category);
+           const data = await extractProductData(post.caption, category, post.imageBuffer);
            if (data.vendor_price === 0) {
              const skipMsg = `⏩ Skipping post from ${post.vendorId}: No price extracted`;
              console.log(skipMsg);
