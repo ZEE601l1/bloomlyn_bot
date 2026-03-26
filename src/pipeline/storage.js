@@ -12,7 +12,7 @@
  */
 export async function uploadAndGetFileId(bot, imageBuffer, chatId) {
   try {
-    const sentMessage = await bot.sendPhoto(chatId, imageBuffer, {
+    const sentMessage = await bot.sendPhoto(chatId, { value: imageBuffer, filename: 'product.jpg' }, {
       caption: '📸 Bloomlyn image upload (auto)',
       disable_notification: true,
     });

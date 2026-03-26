@@ -18,7 +18,7 @@ const CATEGORY_PROMPTS = {
 
   necklace: 'Place the exact necklace from this image on a woman\'s neck, centered and clearly visible. Use a clean, elegant background with soft lighting. The necklace must remain exactly as it appears - do not alter its design, pendant, or chain. Make it the focal point of the image.',
 
-  perfume: 'Place the exact perfume bottle from this image on a clean, luxurious surface with soft shadows and warm lighting. Add luxurious elements like marble, soft fabric, or gold accents. The bottle must remain exactly as it appears - do not alter its label, shape, or color. Highlight the premium nature of the fragrance.',
+  perfume: 'Follow these instructions exactly: Create a luxurious product scene for the perfume bottle in this image. Place the exact bottle onto a premium surface like Carrara marble or dark polished wood. Surround it with subtle, elegant elements like silk petals, a soft-focus gold accessory, or gentle lighting flares. The bottle must be the absolute centerpiece and remain identical to the input image (no changes to the cap, label, or color). Use soft, cinematic lighting with professional bokeh. Respond ONLY with the generated image.',
 
   ring: 'Place the exact ring from this image onto a woman\'s finger in an elegant pose. Use soft, warm lighting with a clean, minimal background. The ring must remain exactly as it appears - do not alter its design, stones, or material. Show the ring clearly and beautifully.',
 };
@@ -33,7 +33,7 @@ export function initCompositor() {
   }
 
   genAI = new GoogleGenerativeAI(config.geminiApiKey);
-  model = genAI.getGenerativeModel({ model: AI_MODELS.MULTIMODAL });
+  model = genAI.getGenerativeModel({ model: AI_MODELS.IMAGE_GEN });
   console.log('✅ Gemini AI compositor initialized');
   return true;
 }
@@ -82,7 +82,8 @@ export async function compositeImage(imageBuffer, category) {
       }
     }
 
-    console.log(`⚠️  AI compositing returned no image for ${category}, using original`);
+    const responseText = response.text ? response.text() : 'No text response';
+    console.log(`⚠️  AI compositing returned no image for ${category}. Gemini responded with: "${responseText.substring(0, 200)}..."`);
     return null;
   } catch (error) {
     console.error(`❌ AI compositing failed for ${category}: ${error.message}`);

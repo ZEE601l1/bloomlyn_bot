@@ -44,13 +44,12 @@ export async function classifyProduct(caption, imageBuffer) {
     
     let description = null;
 
-    // If text-based classification returns "Other" or is unsure, try multimodal
-    if ((!category || category === 'Other') && imageBuffer) {
-      console.log('🖼️ Text classification inconclusive, trying multimodal...');
-      const multimodalModel = genAI.getGenerativeModel({ model: AI_MODELS.MULTIMODAL });
-      
+    // Since gemini-3.1-pro-preview is natively multimodal, we can include the image 
+    // in the primary classification prompt for better results if available.
+    if (imageBuffer && (!category || category === 'Other')) {
+      console.log('🖼️ Enhancing classification with multimodal analysis...');
       const parts = [
-        { text: `Classify this product into one of: ${config.categories.join(', ')}. Return ONLY the category name or "Other".` },
+        { text: `Classify this product into exactly one of: ${config.categories.join(', ')}. Return ONLY the category name or "Other".` },
         {
           inlineData: {
             mimeType: 'image/jpeg',
@@ -59,19 +58,15 @@ export async function classifyProduct(caption, imageBuffer) {
         }
       ];
 
-      const multimodalResult = await multimodalModel.generateContent({ contents: [{ role: 'user', parts }] });
+      const multimodalResult = await model.generateContent({ contents: [{ role: 'user', parts }] });
       const multimodalResponse = await multimodalResult.response;
       const multimodalText = multimodalResponse.text().trim();
-      console.log(`🖼️ Multimodal raw result: "${multimodalText}"`);
       
-      // Multimodal prompt should return the category and a brief explanation
       for (const cat of config.categories) {
         if (multimodalText.toLowerCase().includes(cat.toLowerCase())) {
             return { category: cat, description: multimodalText };
         }
       }
-
-      // If it's not a supported category, still return the description so the admin knows what it is
       return { category: 'Other', description: multimodalText };
     }
 

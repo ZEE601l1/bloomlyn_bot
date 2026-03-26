@@ -249,7 +249,7 @@ async function showProduct(bot, chatId, messageId) {
             parse_mode: 'HTML'
           }).catch(() => {});
 
-          const sentMsg = await bot.sendPhoto(chatId, fs.createReadStream(fullPath), {
+          const sentMsg = await bot.sendPhoto(chatId, { value: fs.createReadStream(fullPath), filename: path.basename(fullPath) }, {
             caption: caption,
             reply_markup: { inline_keyboard: keyboard },
             parse_mode: 'HTML'

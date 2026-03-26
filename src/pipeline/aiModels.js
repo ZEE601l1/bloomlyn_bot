@@ -4,7 +4,7 @@
 
 export const AI_MODELS = {
   PRIMARY: 'gemini-3.1-pro-preview',
-  MULTIMODAL: 'gemini-2.0-flash',
+  IMAGE_GEN: 'gemini-3-pro-image-preview', // Nano Banana Pro
 };
 
 export default AI_MODELS;

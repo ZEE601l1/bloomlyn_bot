@@ -20,6 +20,19 @@ export function initBot() {
   registerOrders(bot);
   registerAdmin(bot);
 
+  // Error handling
+  bot.on('polling_error', (error) => {
+    console.error(`❌ Telegram Polling Error: ${error.code} - ${error.message}`);
+  });
+
+  bot.on('webhook_error', (error) => {
+    console.error(`❌ Telegram Webhook Error: ${error.message}`);
+  });
+
+  bot.on('error', (error) => {
+    console.error(`❌ Telegram General Error: ${error.message}`);
+  });
+
   console.log('🚀 Bloomlyn Bot is running...');
   return bot;
 }
