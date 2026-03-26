@@ -98,7 +98,7 @@ export async function notifyAdmin(bot, product) {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: '✅ Approve & Post', callback_data: `approve_product_${product.id}` },
+            { text: product.is_update ? '🔄 Approve Update' : '✅ Approve & Post', callback_data: `approve_product_${product.id}` },
             { text: '❌ Reject', callback_data: `reject_product_${product.id}` },
           ],
         ],

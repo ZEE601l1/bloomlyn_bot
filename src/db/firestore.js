@@ -102,6 +102,27 @@ export async function updateProduct(productId, updates) {
   });
 }
 
+// ==================== PENDING PRODUCT QUERIES ====================
+
+export async function insertPendingProduct(productData) {
+  const docRef = await getDb().collection('bloomlyn_pending_products').add({
+    ...productData,
+    created_at: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getPendingProductById(pendingId) {
+  if (!pendingId || typeof pendingId !== 'string') return null;
+  const doc = await getDb().collection('bloomlyn_pending_products').doc(pendingId).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
+}
+
+export async function deletePendingProduct(pendingId) {
+  if (!pendingId) return;
+  await getDb().collection('bloomlyn_pending_products').doc(pendingId).delete();
+}
+
 // ==================== USER QUERIES ====================
 
 export async function getOrCreateUser(telegramId, userData = {}) {

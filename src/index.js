@@ -10,8 +10,8 @@ import { extractProductData } from './pipeline/extractor.js';
 import { findDuplicate } from './pipeline/duplicateDetector.js';
 import { uploadAndGetFileId } from './pipeline/storage.js';
 import { compositeImage, initCompositor } from './pipeline/imageCompositor.js';
-import { insertProduct, updateProduct, getOrCreateVendor } from './db/firestore.js';
-import { notifyChannel, notifyAdmin, notifyAdminStatus } from './bot/channelNotifier.js';
+import { insertPendingProduct, getOrCreateVendor } from './db/firestore.js';
+import { notifyAdmin, notifyAdminStatus } from './bot/channelNotifier.js';
 import jobQueue from './queue/jobQueue.js';
 
 async function main() {
@@ -88,45 +88,37 @@ async function main() {
            const profit = config.profitMargins[category.toLowerCase().replace(/s$/, '')] || 1000;
            const sellingPrice = data.vendor_price + profit;
 
-           // Step 6: DB Store or Update
+           // Step 6: Store in Pending Collection (Approve-First Workflow)
            const vendor = await getOrCreateVendor(post.vendorId);
            
-           if (duplicate) {
-             console.log(`🔄 Updating existing product: ${duplicate.name}`);
-             await updateProduct(duplicate.id, {
-               vendor_price: data.vendor_price,
-               selling_price: sellingPrice,
-               telegram_file_id: fileId
-             });
-             
-             await notifyAdminStatus(bot, `🔄 <b>Updated existing product:</b> ${duplicate.name}`);
-           } else {
-             console.log(`✨ Inserting new product: ${data.name}`);
-             const productId = await insertProduct({
-               name: data.name,
-               category,
-               vendor_price: data.vendor_price,
-               selling_price: sellingPrice,
-               profit,
-               description: data.description,
-               telegram_file_id: fileId,
-               normalized_name: data.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-               vendor_id: vendor.id,
-               status: 'active'
-             });
-             
-             // Final Admin notification with Approve/Reject buttons
-             await notifyAdmin(bot, {
-               id: productId,
-               name: data.name,
-               category,
-               vendor_price: data.vendor_price,
-               selling_price: sellingPrice,
-               description: data.description,
-               telegram_file_id: fileId,
-               vendor_id: vendor.id
-             });
-           }
+           console.log(`⏳ Saving to pending approval: ${data.name}`);
+           const pendingId = await insertPendingProduct({
+             name: data.name,
+             category,
+             vendor_price: data.vendor_price,
+             selling_price: sellingPrice,
+             profit,
+             description: data.description,
+             telegram_file_id: fileId,
+             normalized_name: data.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+             vendor_id: vendor.id,
+             is_update: !!duplicate,
+             target_product_id: duplicate ? duplicate.id : null,
+             status: 'pending'
+           });
+           
+           // Final Admin notification with Approve/Reject buttons
+           await notifyAdmin(bot, {
+             id: pendingId, // Use pendingId for approval buttons
+             name: data.name,
+             category,
+             vendor_price: data.vendor_price,
+             selling_price: sellingPrice,
+             description: data.description,
+             telegram_file_id: fileId,
+             vendor_id: vendor.id,
+             is_update: !!duplicate
+           });
          });
        });
        

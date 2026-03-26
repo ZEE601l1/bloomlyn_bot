@@ -1,5 +1,5 @@
 import config from '../../config.js';
-import { getDb, getProductById, updateProduct } from '../../db/firestore.js';
+import { getDb, getProductById, updateProduct, insertProduct, getPendingProductById, deletePendingProduct } from '../../db/firestore.js';
 import { notifyChannel } from '../channelNotifier.js';
 import admin from 'firebase-admin';
 
@@ -147,16 +147,49 @@ export default function registerAdmin(bot) {
       }
 
       if (data.startsWith('approve_product_')) {
-        const productId = data.replace('approve_product_', '');
-        const product = await getProductById(productId);
+        const pendingId = data.replace('approve_product_', '');
+        const pendingProduct = await getPendingProductById(pendingId);
 
-        if (!product) return bot.answerCallbackQuery(query.id, { text: "Product not found" });
+        if (!pendingProduct) return bot.answerCallbackQuery(query.id, { text: "Pending product not found" });
 
-        // Post to public channel
-        await notifyChannel(bot, { id: productId, ...product });
+        let finalId;
+        if (pendingProduct.is_update && pendingProduct.target_product_id) {
+          // Update existing product
+          console.log(`🔄 Moving update from pending to live: ${pendingProduct.name}`);
+          await updateProduct(pendingProduct.target_product_id, {
+            vendor_price: pendingProduct.vendor_price,
+            selling_price: pendingProduct.selling_price,
+            telegram_file_id: pendingProduct.telegram_file_id,
+            description: pendingProduct.description,
+            name: pendingProduct.name
+          });
+          finalId = pendingProduct.target_product_id;
+        } else {
+          // Insert new product
+          console.log(`✨ Moving new product from pending to live: ${pendingProduct.name}`);
+          finalId = await insertProduct({
+            name: pendingProduct.name,
+            category: pendingProduct.category,
+            vendor_price: pendingProduct.vendor_price,
+            selling_price: pendingProduct.selling_price,
+            profit: pendingProduct.profit,
+            description: pendingProduct.description,
+            telegram_file_id: pendingProduct.telegram_file_id,
+            normalized_name: pendingProduct.normalized_name,
+            vendor_id: pendingProduct.vendor_id,
+            status: 'active'
+          });
+        }
+
+        // Fetch final product for channel notification
+        const finalProduct = await getProductById(finalId);
+        await notifyChannel(bot, finalProduct);
+
+        // Clean up pending
+        await deletePendingProduct(pendingId);
 
         await bot.answerCallbackQuery(query.id, { text: "Product approved and posted! ✅" });
-        await bot.editMessageText(`✅ <b>Approved & Posted:</b> ${product.name}`, {
+        await bot.editMessageText(`✅ <b>Approved & Posted:</b> ${pendingProduct.name}`, {
           chat_id: chatId,
           message_id: query.message.message_id,
           parse_mode: 'HTML'
@@ -164,20 +197,18 @@ export default function registerAdmin(bot) {
       }
 
       if (data.startsWith('reject_product_')) {
-        const productId = data.replace('reject_product_', '');
-        const product = await getProductById(productId);
+        const pendingId = data.replace('reject_product_', '');
+        const pendingProduct = await getPendingProductById(pendingId);
+
+        // Clean up pending
+        await deletePendingProduct(pendingId);
 
         await bot.answerCallbackQuery(query.id, { text: "Product rejected ❌" });
-        await bot.editMessageText(`❌ <b>Rejected:</b> ${product ? product.name : productId}`, {
+        await bot.editMessageText(`❌ <b>Rejected:</b> ${pendingProduct ? pendingProduct.name : pendingId}`, {
           chat_id: chatId,
           message_id: query.message.message_id,
           parse_mode: 'HTML'
         });
-        
-        // Optionally mark as inactive in DB
-        if (product) {
-          await updateProduct(productId, { status: 'rejected' });
-        }
       }
 
       if (data === 'admin_back') {
