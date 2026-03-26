@@ -249,10 +249,13 @@ async function showProduct(bot, chatId, messageId) {
             parse_mode: 'HTML'
           }).catch(() => {});
 
-          const sentMsg = await bot.sendPhoto(chatId, { value: fs.createReadStream(fullPath), filename: path.basename(fullPath) }, {
+          const sentMsg = await bot.sendPhoto(chatId, fs.createReadStream(fullPath), {
             caption: caption,
             reply_markup: { inline_keyboard: keyboard },
             parse_mode: 'HTML'
+          }, {
+            filename: path.basename(fullPath),
+            contentType: 'image/jpeg'
           });
 
           telegramFileId = sentMsg.photo[sentMsg.photo.length - 1].file_id;
