@@ -22,31 +22,21 @@ export async function notifyChannel(bot, product) {
     const caption = formatProductCaption(product);
     const options = {
       caption,
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: '🛍️ Shop Now',
-              url: `https://t.me/bloomlyn_bot?start=product_${product.id}`,
-            },
-          ],
-        ],
-      },
+      parse_mode: 'HTML'
     };
 
+    let sentMessage;
     if (product.telegram_file_id) {
-      await bot.sendPhoto(channelId, product.telegram_file_id, options);
+      sentMessage = await bot.sendPhoto(channelId, product.telegram_file_id, options);
     } else {
       // Send text-only if no image
-      await bot.sendMessage(channelId, caption, {
-        parse_mode: 'HTML',
-        reply_markup: options.reply_markup,
+      sentMessage = await bot.sendMessage(channelId, caption, {
+        parse_mode: 'HTML'
       });
     }
 
     console.log(`📢 Posted to channel: ${product.name}`);
-    return true;
+    return sentMessage;
   } catch (error) {
     console.error(`❌ Channel notification failed: ${error.message}`);
     return false;
@@ -58,14 +48,14 @@ export async function notifyChannel(bot, product) {
  * @param {object} product - Product data
  * @returns {string} Formatted caption
  */
-function formatProductCaption(product) {
+export function formatProductCaption(product) {
   const name = product.name || 'Beautiful Product';
   const desc = product.description || 'A premium piece from Bloomlyn';
 
   return (
-    `✨ <b>${name}</b>\n\n` +
+    `<b>${name}</b>\n\n` +
     `${desc}\n\n` +
-    `🌸 <i>Bloomlyn – Feminine Elegance</i>`
+    `Get yours now @bloomlyn_bot`
   );
 }
 

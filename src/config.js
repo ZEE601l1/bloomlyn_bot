@@ -24,6 +24,9 @@ const config = {
   // Public Channel
   publicChannelId: process.env.PUBLIC_CHANNEL_ID || '',
 
+  // Forwarding Groups
+  forwardGroupIds: (process.env.FORWARD_GROUP_IDS || '').split(',').map(s => s.trim()).filter(Boolean),
+
   // Firebase
   firebaseCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS || '',
 

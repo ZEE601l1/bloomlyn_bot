@@ -22,6 +22,28 @@ export default function registerAdmin(bot) {
     }
   });
 
+  // Helper command to get Chat ID and Topic ID (Message Thread ID)
+  bot.onText(/\/id/, async (msg) => {
+    try {
+      if (msg.from.id !== config.adminTelegramId) return;
+      
+      let response = `📌 <b>Chat Details:</b>\n\n`;
+      response += `Chat Name: ${msg.chat.title || msg.chat.first_name || 'N/A'}\n`;
+      response += `Chat ID: <code>${msg.chat.id}</code>\n`;
+      
+      if (msg.message_thread_id) {
+        response += `Topic ID: <code>${msg.message_thread_id}</code>\n`;
+      }
+      
+      await bot.sendMessage(msg.chat.id, response, { 
+        parse_mode: 'HTML',
+        reply_to_message_id: msg.message_id 
+      });
+    } catch (error) {
+      console.error('❌ Error in /id handler:', error.message);
+    }
+  });
+
   bot.on('callback_query', async (query) => {
     try {
       const chatId = query.message.chat.id;
@@ -183,7 +205,22 @@ export default function registerAdmin(bot) {
 
         // Fetch final product for channel notification
         const finalProduct = await getProductById(finalId);
-        await notifyChannel(bot, finalProduct);
+        const sentMessage = await notifyChannel(bot, finalProduct);
+
+        // Forward to extra groups if configured (Supports topic IDs via chatId:topicId)
+        if (sentMessage && config.forwardGroupIds && config.forwardGroupIds.length > 0) {
+          for (const groupConfig of config.forwardGroupIds) {
+            try {
+              const [groupId, topicId] = groupConfig.split(':');
+              const options = topicId ? { message_thread_id: parseInt(topicId) } : {};
+              
+              await bot.forwardMessage(groupId, config.publicChannelId, sentMessage.message_id, options);
+              console.log(`✅ Forwarded ${finalProduct.name} to group: ${groupId}${topicId ? ` (Topic: ${topicId})` : ''}`);
+            } catch (forwardError) {
+              console.error(`❌ Failed to forward to ${groupConfig}: ${forwardError.message}`);
+            }
+          }
+        }
 
         // Clean up pending
         await deletePendingProduct(pendingId);

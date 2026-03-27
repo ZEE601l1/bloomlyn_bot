@@ -12,15 +12,15 @@ let genAI;
 let model;
 
 const CATEGORY_PROMPTS = {
-  bag: 'Place the exact bag from this image into a clean, professional product photo. Show a woman elegantly holding or carrying the bag. Use a soft, minimalist background with natural lighting. The bag must remain exactly as it appears - do not alter its design, color, or details. Focus on the bag as the centerpiece.',
+  bag: 'Place the exact bag from this image into a clean, professional product photo. Show a woman elegantly holding or carrying the bag. Use a soft, minimalist background with natural lighting. The bag must remain exactly as it appears - do not alter its design, color, or details. Focus on the bag as the centerpiece. CRITICAL: Generate the image in a 1:1 square aspect ratio.',
 
-  bracelet: 'Place the exact bracelet from this image onto a woman\'s wrist in an elegant pose. Use soft, warm lighting with a clean, minimal background. The bracelet must remain exactly as it appears - do not alter its design, stones, or materials. Show the bracelet clearly and beautifully.',
+  bracelet: 'Place the exact bracelet from this image onto a woman\'s wrist in an elegant pose. Use soft, warm lighting with a clean, minimal background. The bracelet must remain exactly as it appears - do not alter its design, stones, or materials. Show the bracelet clearly and beautifully. CRITICAL: Generate the image in a 1:1 square aspect ratio.',
 
-  necklace: 'Place the exact necklace from this image on a woman\'s neck, centered and clearly visible. Use a clean, elegant background with soft lighting. The necklace must remain exactly as it appears - do not alter its design, pendant, or chain. Make it the focal point of the image.',
+  necklace: 'Place the exact necklace from this image on a woman\'s neck, centered and clearly visible. Use a clean, elegant background with soft lighting. The necklace must remain exactly as it appears - do not alter its design, pendant, or chain. Make it the focal point of the image. CRITICAL: Generate the image in a 1:1 square aspect ratio.',
 
-  perfume: 'Follow these instructions exactly: Create a luxurious product scene for the perfume bottle in this image. Place the exact bottle onto a premium surface like Carrara marble or dark polished wood. Surround it with subtle, elegant elements like silk petals, a soft-focus gold accessory, or gentle lighting flares. The bottle must be the absolute centerpiece and remain identical to the input image (no changes to the cap, label, or color). Use soft, cinematic lighting with professional bokeh. Respond ONLY with the generated image.',
+  perfume: 'Follow these instructions exactly: Create a luxurious product scene for the perfume bottle in this image. Place the exact bottle onto a premium surface like Carrara marble or dark polished wood. Surround it with subtle, elegant elements like silk petals, a soft-focus gold accessory, or gentle lighting flares. The bottle must be the absolute centerpiece and remain identical to the input image (no changes to the cap, label, or color). Use soft, cinematic lighting with professional bokeh. CRITICAL: Generate the image in a 1:1 square aspect ratio. Respond ONLY with the generated image.',
 
-  ring: 'Place the exact ring from this image onto a woman\'s finger in an elegant pose. Use soft, warm lighting with a clean, minimal background. The ring must remain exactly as it appears - do not alter its design, stones, or material. Show the ring clearly and beautifully.',
+  ring: 'Place the exact ring from this image onto a woman\'s finger in an elegant pose. Use soft, warm lighting with a clean, minimal background. The ring must remain exactly as it appears - do not alter its design, stones, or material. Show the ring clearly and beautifully. CRITICAL: Generate the image in a 1:1 square aspect ratio.',
 };
 
 /**

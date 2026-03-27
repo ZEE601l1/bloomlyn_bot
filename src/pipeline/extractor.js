@@ -37,9 +37,9 @@ export async function extractProductData(caption, category, imageBuffer) {
         VENDOR CAPTION: "${caption}"
         
         CRITICAL RULES:
-        1. REWRITE the description: Do NOT copy the vendor's caption. Instead, write a short (1-2 sentences), "cool", and highly persuasive marketing description. Focus on why a buyer would love this product. IMPORTANT: Ensure you preserve and naturally include any technical specs like volume (ml), weight, or sizing if they were mentioned in the original caption.
-        2. PRICE: Extract the base numeric price in Naira. Do NOT confuse price with measurements (ml, oz) or bulk offers (e.g., if it says "1 for 10k, 3 for 29k", the price is 10000).
-        3. EMOJIS: Use subtle, elegant emojis in the description but keep it professional.
+        1. REWRITE the description: Do NOT copy the vendor's caption. Instead, write a short, clean, and professional product description (1-2 sentences). Focus ONLY on the product details and features, without using overly "salesy" or persuasive marketing language. IMPORTANT: Ensure you preserve and naturally include any technical specs like volume (ml), weight, or sizing if they were mentioned in the original caption.
+        2. NO EMOJIS OR DASHES: Do NOT use any emojis, em dashes (—), or special marketing symbols in the description. Use only standard punctuation (periods, commas).
+        3. PRICE: Extract the base numeric price in Naira. Do NOT confuse price with measurements (ml, oz) or bulk offers (e.g., if it says "1 for 10k, 3 for 29k", the price is 10000).
         4. NO VENDOR INFO: Remove all phone numbers, social media handles, or vendor names from the description.
       ` }
     ];
